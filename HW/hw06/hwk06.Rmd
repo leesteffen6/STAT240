@@ -1,0 +1,271 @@
+---
+title: "Homework 6"
+author: "Student's Name Here"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE,
+                      warning = FALSE, error = TRUE,
+                      fig.height = 3)
+library(tidyverse)
+```
+
+# Preliminaries
+
+- This file should be in `STAT240/homework/hw06` on your local computer.
+
+
+# Problem 1
+
+Your friend wants to study how many classes UW-Madison students take each semester.  They propose the following probability distribution for $X$, the number of classes taken:
+
+| x        | 1    | 2    | 3   | 4   | 5   |
+| -------- |:----:|:----:|:---:|:---:|:---:|
+| P(X = x) | 0.15 | 0.05 | 0.4 | 0.3 | 0.1 |
+
+(a) Find the expected value and standard deviation of $X$.  You can use R.
+
+```{r}
+x <- c(1, 2, 3, 4, 5)
+p <- c(0.15, 0.05, 0.4, 0.3, 0.1)
+
+mu <- sum(x * p)
+mu
+
+variance <- sum((x - mu)^2 * p)
+
+sigma <- sqrt(variance)
+sigma
+```
+
+(b) 10 students are asked how many classes they are taking, giving data (4, 3, 5, 3, 4, 4, 1, 3, 4, 4), which has an average of 3.5.  Assuming your friend's model in (a) is true, which of these statements do you think is most reasonable?  Explain your reasoning.
+
+- The average of 10 students will be greater than or equal to 3.5 about 50% of the time.
+- The average of 10 students will be greater than or equal to 3.5 about 20% of the time.
+- The average of 10 students will be greater than or equal to 3.5 about 1% of the time.
+
+    Do not do any formal calculations - just identify which statement makes the most sense intuitively.
+    
+I would say the second statement is most reasonable because a sample of 10 is too small. 1% just seems too small and 50% just seems too big considering the sample size.
+
+(c) Based on your observed sample of 10 students with sample mean 3.5, do you think your friend's model from (a) is incorrect?  What would your sample data need to look like for you to doubt your friend's model?
+
+No, I wouldn't doubt the model. Considering that the number was close to 3.15 (our expected value) means that the sample of data our friend got was pretty good. However, if the average was way too high or too low, the that's when we'd have doubt in the data. 
+
+# Problem 2
+
+For each of the following descriptions, say whether the random variable is reasonably approximated by a binomial random variable or not, and explain your answer. If the variable is binomial, identify $n$ the number of trials and $p$ the probability of success.  If it is not binomial, identify which of the "BINS" assumptions is violated.
+
+(a) A fair die is rolled until a 1 appears, and $X$ denotes the number of rolls.
+
+This description is not binomial because it violates the N in BINS which means it must have a fixed number of trials. In this case, there is no fixed number of trials. It keeps going until a 1 is rolled. 
+
+(b) Twenty of the different Badger basketball players each attempt 1 free throw and $X$ is the total number of successful attempts.
+
+This description is not binomial because it violates the S in BINS which means it must have the same probability of success. In this case, each basketball player may have advantages over other basketball players such as skill or experience. 
+
+(c) A die is rolled 50 times. Let $X$ be the face that lands up most often.
+
+This description is not binomial because it violates the B in BINS which means it must be binary. In this case, it isn't binary because a dice has six sides which means there's six outcomes. 
+
+(d) In a bag of 10 batteries, I know 2 are old. Let $X$ be the number of old batteries I choose when taking a sample of 4 to put into my calculator.
+
+This description is not binomial because it violates the I in BINS which means that each outcome doesn't influence the next. In this case, when you take a battery out, you are influencing the outcome of the next battery drawn. 
+
+(e) It is reported that 20% of Madison homeowners have installed a home security system. Let $X$ be the number of homes without home security systems installed in a random sample of 100 houses in the Madison city limits.
+
+This description is binomial. In this case n would be 100 and p would be 80% or 0.8 since we are looking for homes without security systems. 
+
+# Problem 3
+
+(a) Create a data frame with the following columns.
+Each row corresponds to a single $\text{Binom}(n, p)$ distribution. The first two columns are the parameters of the distribution.
+
+- `n`, which is always equal to 100
+- `p`, which ranges from 0 to 1 by 0.01 $(0, 0.01, 0.02, \ldots , 0.99, 1)$
+- `mu`, the mean
+- `sigma`, the standard deviation
+- `q90`, the 0.9 quantile (or 90th percentile)
+
+```{r}
+df <- tibble(
+  n = 100,
+  p = seq(0, 1, by = 0.01),
+  mu = n*p,
+  sigma = sqrt(mu*(1 - p)),
+  q90 = qbinom(0.9, 100, p)
+)
+```
+
+(b) Create line plots of the following:
+- $\sigma$ versus $p$
+- 90th percentile versus $p$
+
+```{r}
+ggplot(df, aes(x = p, y = sigma)) +
+  geom_line() +
+  labs(
+    title = "Standard Dev vs. P", 
+    x = "p", 
+    y = "Standard Dev."
+  )
+```
+```{r}
+ggplot(df, aes(x = p, y = q90)) +
+  geom_line() +
+  labs(
+    title = "90th Percentile vs. P", 
+    x = "P", 
+    y = "90th Percentile"
+  )
+```
+
+(c) How does the standard deviation change with $p$?
+
+As standard deviation increases, p also increases from 0 to 0.50. After that the standard deviation decreases until from 0.5 to 1.
+
+(d) Comment on the relationship between the 90th percentile and $p$.
+
+The 90th percentile increases as p increases. The graph is more step like because it only takes in whole number values. 
+
+# Problem 4
+
+The random variable $X$ has the $\text{Binom}(100, 0.2)$ distribution.
+
+(a) Find an integer $a$ so that $P(X \le a) \ge 0.5$. (There are many choices for $a$).  Show the value of $P(X \le a)$ with `pbinom()`.
+
+```{r}
+mu <- 100 * 0.2
+
+pbinom(mu, 100, 0.2)
+```
+
+(b) Find an integer $b$ so that $P(X \ge b) \ge 0.5$. (There are many choices for $b$). Show the value of $P(X \ge b)$ with `pbinom()`. 
+
+```{r}
+1 - pbinom(19, 100, 0.2)
+```
+
+(c) Find an integer $c$ so that $P(X \le c) \ge 0.5$ *and* $P(X \ge c) \ge 0.5$. Show the values of $c$, $P(X \le c)$, and $P(X \ge c)$.
+
+```{r}
+c <- 20
+pbinom(c, size = 100, prob = 0.2)
+1 - pbinom(c - 1, size = 100, prob = 0.2)
+```
+
+# Problem 5
+
+A student decided to guess randomly on their True/False quiz.  The number of questions they answer correctly is $\text{Binom}(10, 0.5)$.
+
+(a) Write code with `dbinom`, `pbinom`, or `qbinom` to calculate each value or probability.
+
+    "I know I must have gotten at least one question right!"
+    
+```{r}
+pbinom(0, 10, 0.5, lower.tail = F)
+```
+
+    "I probably got 3 - 5 of the questions right."
+    
+```{r}
+pbinom(5, 10, 0.5) - pbinom(2, 10, 0.5)
+```
+
+    "I feel lucky.  The answers I picked are better than 90% of my other attempts!"
+
+(b) Explain why the 90th percentile is not 9. 
+
+```{r}
+qbinom(0.9, 10, 0.5)
+```
+
+# Problem 6
+
+Match the four binomial distributions given below to the appropriate graph in `p6_choices.png`. Briefly justify your choices.
+
+- Binom(12, 0.5)
+
+Graph C because it looks the most distributed which well represents the 12 trials and 0.5 success rate
+
+- Binom(12, 0.6)
+
+Graph B because although similar to C it has the extra 0.1 higher success it should move the graph a little bit to the right
+
+- Binom(10, 0.1)
+
+Graph D because less trials and less probability of success
+
+- Binom(10, 0.3)
+
+Graph E because it should look similar to graph D but just slightly to the right
+
+# Problem 7
+
+(a) Identify whether each of the statements below are *always true*, *sometimes true*, or *never true* for Binomial random variables.  Briefly explain your answers. You can optionally use R to help make your argument.
+
+- The distribution has no limits and covers the entire number line.
+
+Never true. It's bounded by 0 and n, so it never covers the entire line
+
+- The 50th percentile is less than the 60th percentile.
+
+Sometimes true. Percentiles in a binomial distribution can be the same because binomial random variables are discrete
+
+- If $\mu$ is the mean of the distribution, then the probability distribution graphically reaches its maximum at $\mu$.
+
+Sometimes true. For a binomial distribution, the peak is around the center, but not always exactly at the mean
+
+- If $\mu$ is the mean of the distribution, then the probability of getting exactly $\mu$ on a random draw is non-zero.
+
+Sometimes true. For a binomial distribution, this depends on whether mu is an integer
+
+(b) Repeat part (a), but assess the truth of each statement for Normal random variables.
+
+- The distribution has no limits and covers the entire number line.
+
+Always true. A normal random variable can take any real value from negative infinity to positive infinity
+
+- The 50th percentile is less than the 60th percentile.
+
+Always true. A normal distribution is continuous, so percentiles strictly increase
+
+- If $\mu$ is the mean of the distribution, then the probability distribution graphically reaches its maximum at $\mu$.
+
+Always true. For a normal distribution, the curve is symmetric and centered at mu, and the highest point of the density curve occurs exactly at mu. 
+
+- If $\mu$ is the mean of the distribution, then the probability of getting exactly $\mu$ on a random draw is non-zero.
+
+Never true. A normal random variable is continuous, so the probability of getting any exact single value is
+
+# Problem 8
+
+Use `pnorm()` to find the following probabilities on $X \sim N(0, 1)$.
+
+(a) $P(X < -1)$
+
+```{r}
+pnorm(-1)
+```
+
+(b) $P(X > 1)$
+
+```{r}
+1 - pnorm(1)
+```
+
+(c) $P(0.5 < X < 2)$
+
+```{r}
+pnorm(2) - pnorm(0.5)
+```
+
+(d) $P(|X| > 0.75)$
+
+```{r}
+pnorm(-0.75) + (1 - pnorm(0.75))
+```
+
+

@@ -1,0 +1,169 @@
+---
+title: "Homework 2"
+author: "Lee Steffen"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, error = TRUE)
+library(tidyverse)
+```
+
+# Preliminaries
+
+- This file should be in `STAT240/homework/hw02` on your local computer.
+- You should also download `lake-monona-winters-2025.csv` and `lake-mendota-winters-2025.csv` to `STAT240/data` on your local computer.
+
+While you should create your answers in the .Rmd file, homework problems are better formatted and therefore easier to read in the .html file. We recommended frequently knitting and switching between the two as you read and solve problems.
+
+The dataset `lake-monona-winters-2025.csv` records the first freeze, last thaw, and duration of ice cover on Lake Monona for each winter.  We are primarily interested in the following variables:
+
+- `ff_cat`, the categorical variable describing the period of the day of the first freeze
+- `year1`, the starting year of that winter
+- `duration`, the duration of ice cover in days
+
+```{r read-data, echo = FALSE}
+monona <- read_csv("../../data/lake-monona-winters-2025.csv")
+```
+
+
+# Problem 1
+
+Create a histogram of the `duration` of Lake Monona's closures due to ice using the `monona` dataframe created above. Incorporate the following customizations:
+
+- Bars should span neat intervals of ten; [40, 50], [50, 60], and so on. Make sure they start and end on multiples of 10.
+
+- Change the outline and inside color of the bars to some custom combination that you think looks good together.
+
+```{r}
+ggplot(monona, aes(x = duration)) +
+  geom_histogram(binwidth = 10,
+                 boundary = 40,
+                 fill = "steelblue",
+                 col = "black")
+```
+
+
+# Problem 2
+
+Your friend is trying to produce this plot of frequency counts for the variable `ff_cat`, which captures the date of first freeze in two week periods.
+
+See the file `exampleBarplot.png` in the hw02 folder on Github.
+
+Your friend's attempt below is producing an error.
+
+```{r, error = TRUE}
+# Fix your friend's error!
+ggplot(monona, aes(x = ff_cat)) +
+  geom_col()
+```
+
+```{r}
+ggplot(monona, aes(x = ff_cat)) +
+  geom_bar(fill = "gray40")
+```
+Instead of doing geom_col, we're using geom_bar to create the graph
+
+
+
+Fix your friend's error by editing the above chunk (or create another one). Then, explain why the original code was wrong and why the fixed code works.
+
+For this problem, you just need to create a working bar plot.  For an extra challenge, try to figure out how to change the order of the bars.
+
+# Problem 3
+
+Code in the next chunk makes a scatter plot that shows how the variable `duration` changes with time (using `year1`).
+
+```{r}
+# This chunk is provided for you - do not edit
+ggplot(monona, aes(x = year1, y = duration)) +
+  geom_point(alpha = 0.2) +
+  geom_smooth(method = "lm", se=FALSE) +
+  labs(
+    title = "Lake Monona Winter Closure Durations Over Time",
+    subtitle = "Trend Line Shown in Blue"
+  )
+```
+
+(a) What does the argument `method = "lm"` change on the plot?
+It makes the line straight. "lm" stands for linear line.
+
+(b) What does the argument `se = FALSE` change on the plot?
+Removes the shaded region around the line, this shaded region represents the uncertainty of the line
+
+# Problem 4
+
+This problem refers to the graph created in problem 3 above. Its goal is to display to the viewer that, on average, the duration Lake Monona closes due to ice is decreasing over time.
+
+(a) In a typical year around 1875, how long would Lake Monona close due to ice? (No code needed - your best guess based on the plot will suffice.) 
+Typical duration would be around 120
+
+(b) In a typical year around 2000, how long would Lake Monona close due to ice?
+Typical duration would be around 90
+
+(c) Consider encountering this graph in a published news paper. Name one specific thing this graph does well to accomplish its goal, and what specific part of the code is responsible for it.
+The graph does a good job of showing that the duration decreases and has been decreasing. I would say the geom_plot and the geom_smooth both complement each other in showing this.
+
+(d) In the same context as c), name one specific thing that could be improved about this graph, and describe what code you would add/edit to make it happen. (No need to formally write and run the code, just a description.)
+A potential thing that we could add is in the ggplot we can add a col = plot50, adding this will help us see the 50 year different sections and show us the trend line of that 50 year spread 
+
+
+# Problem 5
+
+The below chunk (which is hidden in the knitted file) reads in `lake-mendota-winters-2025.csv` into a new object called `mendota`.  This dataframe records the same winter freeze variables for Lake Mendota, just like the `monona` data does for Lake Monona.
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE}
+mendota <- read_csv("../../data/lake-mendota-winters-2025.csv")
+```
+
+The code below uses both datasets to create a single plot of year vs duration for both lakes.  
+
+```{r}
+ggplot(mapping = aes(x = year1, y = duration)) +
+  geom_smooth(data = mendota, color = "red") +
+  geom_smooth(data = monona, color = "blue")
+```
+
+Identify all of the aesthetics used in this plot, and explain whether each one is constant or variable.  Are the variable aesthetic(s) global or local?
+All of the aesthetics used in this plot are year1 (represents the x axis), duration (represents the y axis) and color which represents the color of the lines. Both the year1 and duration aesthetic are variables whereas the color aesthetic is a constant. Both of the variables named are global variables because they both apply to the geom_smooth layers. 
+
+# Problem 6
+
+The below chunk creates a new dataframe called `combined`, which contains freeze durations for both Lake Mendota AND Lake Monona.
+
+```{r}
+# We will learn how this code works next week!
+combined = bind_rows(monona %>% mutate(lake = "Monona"), mendota %>% mutate(lake = "Mendota")) %>% 
+  arrange(desc(year1)) %>% 
+  select(lake, year1, duration)
+
+# Take a look at the first six rows; notice we have TWO rows for each year now, one for each lake!
+head(combined)
+```
+
+Create a similar plot to problem 5, with `duration` on the y axis, `year1` on the x axis, and two smooth lines, one for each lake. This time, use the `combined` dataset and a single call to `geom_smooth()`.
+```{r}
+ggplot(combined, aes(x = year1, y = duration, col = lake)) +
+  geom_smooth()
+```
+
+
+# Problem 7
+
+Using the `combined` data, create a plot similar to problems 5 and 6, but with a line showing each year's specific data point, rather than a smooth line.  There should be two separate lines for each lake.
+```{r}
+ggplot(combined, aes(x = year1, y = duration, color = lake)) +
+  geom_line()
+```
+
+
+# Problem 8
+
+Compare the graphs from problems 6 and 7.
+
+Consider trying to determine in what time period Lake Mendota was freezing, on average, longer than Lake Monona. Which of graph do you prefer for this determination and why?
+
+I prefer the graph from problem 6 because it shows the overall trend in freezing duration and removes the year to year, making it easier to compare the lakes on average. From the smooth plot, Lake Mendota appears to have a longer average freezing duration than Lake Monona roughly in the 1970s
+
+

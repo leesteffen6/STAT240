@@ -1,0 +1,76 @@
+---
+title: "Group Project Proposal"
+author: "Lee Steffe, Sam Fochs, Kishan Rishik Kota"
+output: html_document
+---
+
+
+# Group Communication Plan
+
+Our group will communicate in person and through Instagram or SnapChat to stay in contact throughout the project.
+
+We plan to meet at least once per week in person after class as well as have additional meetings at Morgridge Hall as needed before deadlines
+
+This approach will allow us to stay organized, divide tasks efficiently, and ensure consistent progress.
+
+# Questions of Interest
+
+How does point differential affect the number of wins in the NFL? 
+
+How does turnover percentage impact team success (wins)?
+
+Does offensive efficiency (yards per play) predict wins?
+
+Do teams that gain more total yards win more games?
+
+Is there a relationship between points scored and wins?
+
+Is point differential a better predictor of wins than total yards?
+
+# Dataset
+
+```{r}
+nfl_team_stats <- read.csv("../data/team_stats_2003_2023.csv")
+```
+
+# Description of Dataset
+
+The data originates from Pro-Football-Reference, a publicly available sports statistics website that compiles official NFL game and team statistics. The dataset was collected using web scraping techniques, specifically Python with BeautifulSoup and Selenium WebDriver, to extract the relevant team statistics from the website and organize them into a structured format for analysis.
+
+We will focus on the following variables:
+
+- wins: Number of games won by a team in a season
+- points_diff: The difference between points scored and points allowed
+
+These variables are directly related to our research question, as point differential reflects overall team performance and may influence wins. There are other variables of interest that we will use as well.
+
+Each row in the dataset represents: One NFL team’s performance during a single season
+
+This dataset represents a sample of: All NFL teams across multiple seasons (2003–2023)
+
+# Outline of Graph
+
+To explore the relationship between point differential and team success, we will create a scatterplot.
+
+- The x axis will represent points_diff (point differential)
+- The y axis will represent wins (number of wins in a season)
+
+Each point on the graph will represent a single NFL team’s performance during one season.
+
+The NFL is very interesting in that there are many stats that we can work with, so points_diff isn't the only stat we can use, we can use yards_per_play_offense as another piece of data to contribute to the questions at hand.
+
+# Type of Inference Method
+
+We will use simple linear regression as our method of inference.
+
+This method allows us to examine the relationship between points_diff (point differential) and wins (number of wins).
+
+Using linear regression, we will:
+
+- Estimate how changes in point differential affect the number of wins
+- Determine whether there is a statistically significant relationship between the two variables
+- Quantify the strength and direction of this relationship
+
+This approach is appropriate because both variables are numerical and we are interested in modeling a linear relationship between them.
+
+

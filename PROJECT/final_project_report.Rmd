@@ -1,0 +1,149 @@
+---
+title: "Final Project Report"
+author: "Lee Steffe, Sam Fochs, Kishan Rishik Kota"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+# Introduction 
+
+Point differential measures how much a team outscored or was outscored by opponents over a season. While it may seem like teams that score more points than their opponents should win more games, it is not immediately clear how strong this relationship is. This analysis aims to determine how strongly point differential is related to total wins in the NFL.
+
+The question of interest for this report is whether there is a linear relationship between point differential and the number of wins in an NFL season.
+
+Our analysis found that there is a strong positive linear relationship between point differential and wins. The scatterplot and regression model both show that teams with higher point differentials tend to have more wins. Additionally, the extremely small p-value provides strong evidence that this relationship is not due to random chance. The model explains about 82.6% of the variation in wins, further supporting that point differential is a strong predictor of team success.
+
+# Background
+
+```{r}
+team_stats <- read_csv("../data/team_stats_2003_2023.csv")
+
+team_clean <- team_stats %>%
+  select(wins, points_diff) %>%
+  drop_na()
+```
+
+The dataset used in this analysis was obtained from Kaggle (https://www.kaggle.com/datasets/nickcantalupa/nfl-team-data-2003-2023), where it was made publicly available for download. The data was originally sourced from Pro Football Reference, which provides detailed NFL team statistics. The dataset was downloaded as a CSV file and then cleaned in R for analysis. Each row represents one NFL team in a single season.
+
+The two main variables used were wins, which represents the total number of regular season wins for a team, and points_diff, which represents point differential, calculated as total points scored minus total points allowed during the season.
+
+```{r}
+ggplot(team_clean, aes(x = points_diff, y = wins)) +
+  geom_jitter(alpha = 0.5) +
+  geom_smooth(method="lm", se=FALSE) +
+  labs(
+    title = "Wins vs Point Differential",
+    x = "Point Differential",
+    y = "Wins"
+  )
+```
+
+The scatterplot of point differential versus wins shows a strong positive linear trend. Teams with larger positive point differentials tend to have more wins, while teams with negative point differentials tend to have fewer wins. The fitted regression line supports the idea that a linear model is appropriate for this relationship.
+
+
+# Statistical Analysis
+
+```{r}
+model <- lm(wins ~ points_diff, data = team_clean)
+
+summary(model)
+```
+
+We used a simple linear regression model to analyze the relationship between point differential and wins.
+
+$$
+y_i = \beta_0 + \beta_1 x_i + \epsilon_i
+$$
+
+where \(y_i\) represents wins, \(x_i\) represents point differential, \(\beta_0\) is the intercept, \(\beta_1\) is the slope, and \(\epsilon_i\) represents random error.
+
+The parameter of interest is \(\beta_1\), the slope, which represents the average change in wins for a one point increase in point differential.
+
+We tested the following hypotheses:
+
+$$
+H_0 : \beta_1 = 0
+$$
+
+$$
+H_a : \beta_1 \neq 0
+$$
+
+The null hypothesis states that there is no linear relationship between point differential and wins. The alternative hypothesis states that a linear relationship exists.
+
+We used a significance level of:
+
+$$
+\alpha = 0.05
+$$
+
+## Assumptions
+
+For the linear regression model to be appropriate, several assumptions must be reasonable.
+
+### Linearity
+
+There should be a linear relationship between point differential and wins. The scatterplot shows a clear linear trend, suggesting that the linearity assumption is reasonable.
+
+### Constant Variance
+
+The spread of residuals should remain fairly constant across different values of point differential. The residual plot does not show a strong funnel shape, so the constant variance assumption appears reasonable.
+
+### Normality
+
+The residuals should be approximately normally distributed with mean 0. The residuals do not show extreme skew or outliers, so the normality assumption appears reasonable.
+
+```{r}
+team_resids <- team_clean %>%
+  mutate(residuals = resid(model)) %>%
+  select(points_diff, wins, residuals)
+
+team_resids %>%
+  ggplot(aes(x = points_diff, y = residuals)) +
+  geom_jitter(width = 5, height = 0.1) +
+  geom_hline(yintercept = 0) +
+  labs(
+    title = "Residual Plot",
+    x = "Point Differential",
+    y = "Residuals"
+  )
+```
+
+The fitted regression equation was:
+
+$$
+\hat{y} = 8.05 + 0.028x
+$$
+
+The p-value for the slope was:
+
+$$
+p < 2.2 \times 10^{-16}
+$$
+
+The coefficient of determination was:
+
+$$
+R^2 = 0.826
+$$
+Because the p-value is much smaller than 0.05, we reject the null hypothesis and conclude that there is a statistically significant linear relationship between point differential and wins.
+
+
+# Discussion
+
+Our analysis found that there is a strong positive linear relationship between point differential and wins in the NFL. The scatterplot and regression model both show that teams with higher point differentials tend to have more wins. Additionally, the extremely small p-value provides strong evidence that this relationship is not due to random chance.
+
+The coefficient of determination R squared was 0.826, meaning that about 82.6% of the variation in wins can be explained by point differential. This suggests that point differential is a strong predictor of team success.
+
+However, point differential does not explain all of the variation in wins. Other factors such as close game outcomes, injuries, turnovers, and strength of schedule may also influence team performance.
+
+One limitation of this analysis is that only one predictor variable was used. Future research could include additional variables, such as turnover margin or strength of schedule, to better explain the remaining variation in wins.
+
+Overall, the results support the conclusion that point differential has a strong and statistically significant linear relationship with wins in the NFL.

@@ -1,0 +1,274 @@
+---
+title: "Homework 10"
+author: "Lee Steffen"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE,
+                      warning = FALSE, error = TRUE,
+                      fig.height = 3)
+library(tidyverse)
+```
+
+```{r, echo=F}
+old <- theme_get()
+
+theme_set(theme(panel.background = element_rect(fill = "#ededfb")))
+```
+
+
+# Preliminaries
+
+- This file should be in `STAT240/homework/hw10` on your local computer.
+- Download `parental_leave.csv` and `happiness_2019` to `STAT240/data`.
+
+
+# Problem 1
+
+Two sets of data were used in the equal-variances T hypothesis test of
+
+$$H_0: \mu_1 - \mu_2 = 2 \quad \text{versus} \quad H_A: \mu_1 - \mu_2 < 2$$
+
+We know that $s_1 = 2, s_2 = 3, n_1 = 16$, and $n_2 = 15$. If the p-value is 0.001298716, what is the observed difference in means, $\bar{x}_1 - \bar{x}_2$?
+
+```{r}
+s1 <- 2
+s2 <- 3
+n1 <- 16
+n2 <- 15
+p_value <- 0.001298716
+
+sp <- sqrt(((n1 - 1)*s1^2 + (n2 - 1)*s2^2) / (n1 + n2 - 2))
+
+se <- sp*sqrt(1/n1 + 1/n2)
+
+df <- n1 + n2 - 2
+
+t_stat <- qt(p_value, df)
+
+mean_diff <- t_stat * se + 2
+
+mean_diff
+```
+
+# Problem 2
+
+Continue working with the parental leave data from homework 9.
+
+```{r}
+leave <- read_csv("../../data/parental_leave.csv")
+
+# Remove spaces from column names
+names(leave) <- make.names(names(leave))
+
+# Tidy numeric columns
+leave <- leave %>%
+  mutate_at(vars(Paid.Maternity.Leave, Unpaid.Maternity.Leave,
+                 Paid.Paternity.Leave, Unpaid.Paternity.Leave),
+            as.numeric) %>%
+  replace(is.na(.), 0)
+```
+
+(a) Re-do the basic data tidying from homework 9 problem 5(a): Mutate a column for total paid leave by adding the weeks of paid maternity and paternity leave. Optionally, give the columns shorter names that are easier to reference.
+
+```{r}
+leave <- leave %>%
+  mutate(total_paid = Paid.Maternity.Leave + Paid.Paternity.Leave)
+```
+
+(b) Consider comparing companies in "Educational Services: College & Universities" (ESCU) to companies in "Healthcare: Hospitals & Clinics" (HHC).  Create and print a table summarizing the mean, standard deviation, and sample size for both groups.
+
+```{r}
+summary_table <- leave %>%
+  filter(Industry %in% c("Educational Services: College & Universities",
+                         "Healthcare: Hospitals & Clinics")) %>%
+  group_by(Industry) %>%
+  summarize(
+    mean = mean(total_paid),
+    sd = sd(total_paid),
+    n = n()
+  )
+
+summary_table
+```
+
+(c) Assess the equal variances assumption for these two groups of data by comparing the ratio of standard deviations.  Even if the standard deviations are similar "enough", why might we want to not assume equal variances?
+
+```{r}
+ratio_sd <- max(summary_table$sd) / min(summary_table$sd)
+ratio_sd
+```
+The ratio of the standard deviations is approximately 1.67. Since this value is less than 2, the standard deviations appear reasonably similar. However, we may still choose not to assume equal variances because Welch’s method is more robust if the population variances are not exactly equal.
+
+# Problem 3
+
+Assuming unequal variances, build a 95% CI for the difference in average total weeks of paid leave between the ESCU and HHC industries and interpret the results. You must do this by hand, but you can check your results with `t.test()`.
+
+```{r}
+escu <- leave %>%
+  filter(Industry == "Educational Services: College & Universities") %>%
+  pull(total_paid)
+
+hhc <- leave %>%
+  filter(Industry == "Healthcare: Hospitals & Clinics") %>%
+  pull(total_paid)
+
+xbar1 <- mean(escu)
+xbar2 <- mean(hhc)
+s1 <- sd(escu)
+s2 <- sd(hhc)
+n1 <- length(escu)
+n2 <- length(hhc)
+
+se <- sqrt(s1^2/n1 + s2^2/n2)
+
+df <- (s1^2/n1 + s2^2/n2)^2 /
+  ((s1^2/n1)^2/(n1 - 1) + (s2^2/n2)^2/(n2 - 1))
+
+t_star <- qt(0.975, df)
+
+lower <- (xbar1 - xbar2) - t_star * se
+upper <- (xbar1 - xbar2) + t_star * se
+
+c(lower, upper)
+```
+
+# Problem 4
+
+Does the educational industry give more paid leave than the healthcare industry?  Perform a hypothesis test of 
+$$H_0: \mu_{ESCU} - \mu_{HHC} = 0 \quad \text{versus}\quad H_A: \mu_{ESCU} - \mu_{HHC} > 0$$
+with $\alpha = 0.05$, assuming unequal variances.  You must do this by hand, but you can check your results with `t.test()`.
+
+```{r}
+t_stat <- ((xbar1 - xbar2) - 0) / se
+p_value <- pt(t_stat, df = df, lower.tail = FALSE)
+
+p_value
+```
+Since the p-value is less than 0.05, we reject the null hypothesis. There is sufficient evidence that the mean total paid leave for Educational Services: College & Universities is greater than the mean total paid leave for Healthcare: Hospitals & Clinics.
+
+# Problem 5
+
+Repeat the by-hand test in problem 4, but instead write hypotheses for $\mu_{HHC} - \mu_{ESCU}$ (the order of subtraction is switched).  Show that you get identical results to problem 4.
+
+```{r}
+t_stat <- ((xbar2 - xbar1) - 0) / se
+p_val <- pt(t_stat, df = df, lower.tail = TRUE)
+
+p_value
+```
+The p-value is less than 0.05, we reject the null hypothesis. There is sufficient evidence that the mean total paid leave for Healthcare: Hospitals & Clinics is less than that of Educational Services: College & Universities.
+
+# Problem 6
+
+Now, consider the "Technology: Software" industry.  Perform the appropriate hypothesis test to determine whether there is a difference in weeks of paid maternity and paternity leave within this industry.  You must do this by hand, but you can check your results with `t.test()`.
+
+```{r}
+tech <- leave %>%
+  filter(Industry == "Technology: Software")
+
+d <- tech$Paid.Maternity.Leave - tech$Paid.Paternity.Leave
+
+dbar <- mean(d)
+sd_d <- sd(d)
+n <- length(d)
+
+se <- sd_d / sqrt(n)
+t_stat <- dbar / se
+df <- n - 1
+p_value <- 2 * pt(abs(t_stat), df = df, lower.tail = FALSE)
+
+p_value
+```
+The p-value is less than 0.05, so we reject the null hypothesis. There is sufficient evidence that the mean paid maternity leave differs from the mean paid paternity leave in the Technology: Software industry.
+
+# Problem 7
+
+Match the six values of correlation to the scatterplots in `p7_choices.png`. Briefly justify your choices.
+
+- $r = -0.85$
+Graph C. Since it's -0.85 were looking for a graph that's going downward and has good correlation and out of the two graphs that show downheartedness, graph C is the best option for this correlation 
+
+- $r = -0.74$
+Graph D. This is the second graph that shows negative correlation and does have some variance. 
+
+- $r = 0.08$
+Graph B. 0.08 signifies really no correlation at all, pretty much means there's a lot of variance and it's pretty obvious that among the options, graph B has this.
+
+- $r = 0.44$
+Graph F. There is a relationship, but it's not a very powerful one, very weak- but positive. Graph F fits this description.
+
+- $r = 0.98$
+Graph A. r = 0.98 signifies that the graph has a very strong positive correlation with some variance and graph A matches that description.
+
+- $r = 1$
+Graph E. R = 1 signifies that the graph is perfect linearly and is going in a positive direction. Graph E fits that description.
+
+# Problem 8
+
+The [Happiness index](https://www.kaggle.com/datasets/sougatapramanick/happiness-index-2018-2019) data contains information on the happiness index of different countries from 2018-2019.  We will focus on the happiness index (`Score`) and GDP per capita of countries in 2019.
+
+```{r}
+happiness <- read_csv("../../data/happiness_2019.csv")
+
+# Remove spaces from column names
+names(happiness) <- make.names(names(happiness))
+```
+
+(a) Create a scatterplot of GDP per capita (x) versus happiness index (y) and calculate the correlation between length and weight.  Comment on the strength and magnitude of the linear relationship, and whether a linear model would be appropriate for this data.
+
+```{r}
+ggplot(happiness, aes(x = GDP.per.capita, y = Score)) +
+  geom_point() +
+  labs(
+    x = "GDP per capita",
+    y = "Happiness index",
+    title = "GDP per capita vs Happiness Index"
+  )
+
+cor(happiness$GDP.per.capita, happiness$Score)
+```
+The correlation is positive, so countries with higher GDP per capita tend to have higher happiness scores. The strength of the relationship appears strong. Since the points show a roughly linear upward trend, a linear model is appropriate.
+
+(b) Calculate the slope and intercept of a least-squares linear regression model for GDP per capita versus happiness index.  Do this with the "by hand formulas" and check your work with R `lm()`.  Interpret the coefficients in context.
+
+```{r}
+x <- happiness$GDP.per.capita
+y <- happiness$Score
+
+r <- cor(x, y)
+sx <- sd(x)
+sy <- sd(y)
+xbar <- mean(x)
+ybar <- mean(y)
+
+b1 <- r * (sy / sx)
+b0 <- ybar - b1 * xbar
+
+b0
+b1
+
+model <- lm(Score ~ GDP.per.capita, data = happiness)
+coef(model)
+```
+The intercept represents the predicted happiness score when GDP per capita is 0.
+
+(c) Using your linear model, predict the happiness index for theoretical countries with 0.75, 1.25, and 2 GDP per capita.  Which of these predictions would you consider to be the least reliable, and why?
+
+```{r}
+model <- lm(Score ~ GDP.per.capita, data = happiness)
+
+new_x <- data.frame(GDP.per.capita = c(0.75, 1.25, 2))
+
+predict(model, newdata = new_x)
+
+range(happiness$GDP.per.capita)
+```
+The least reliable prediction is for a GDP per capita of 2 because it lies outside the observed data range and involves extrapolation.
+
+(d) What are the conclusions we can make about the relationship between GDP per capita and happiness index, based on the linear model?  Does money buy happiness?
+
+The linear model shows a positive relationship between GDP per capita and happiness score, meaning that countries with higher GDP per capita tend to have higher happiness scores on average. However, this is an association and does not imply causation. Therefore, while the model suggests that wealth is related to happiness, it does not prove that money alone causes happiness.
+

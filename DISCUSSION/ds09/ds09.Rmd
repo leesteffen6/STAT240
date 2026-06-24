@@ -1,0 +1,162 @@
+---
+title: "Discussion 9"
+author: "Lee Steffen"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = TRUE, message = FALSE,
+                      error = TRUE)
+
+library(tidyverse)
+```
+
+
+# Preliminaries
+
+- This file should be in `STAT240/discussion/ds09`.
+- This assignment should be completed in your discussion groups, which can be found on the "People" tab on Canvas.
+
+The goal of today's discussion will be to practice hypothesis testing concepts and compare different methods for doing inference on a single proportion.
+
+
+# Problem 1
+#### (approx. 10 minutes)
+
+In statistical testing, the significance level $\alpha$ can also be thought of as the "false positive" error rate, which is the probability that we incorrectly reject the null when the null is actually true.  This is in contrast to a "false negative" error, where we incorrectly fail to reject the null when the alternative is true.  These are called type I and type II errors.
+
+- Type I error: the null is actually true, but we reject it (happens with probability $\alpha$)
+- Type II error: the null is actually false, but we fail to reject it
+
+We control these error rates by setting a larger or smaller $\alpha$.
+
+(a) For each of the following scenarios, write appropriate null and alternative hypotheses in context.  Explain what a type I and type II error would mean, and make an argument for which type of error would be worse.  The first prompt is done for you as an example.
+
+- (a.i) We are using a swab to detect whether is currently infected with COVID-19.
+
+*Null: the person is healthy; Alternative: the person has covid.*
+*Type I error: the person is actually healthy, but the swab returns positive.*
+*Type II error: the person actually has covid, but the swab returns negative.*
+*I think a type II error would be worse, since the person would mistakenly believe themselves to be healthy and might accidentally spread the disease to others.*
+
+- (a.ii) A jury is deciding whether to convict a defendant of a serious crime.
+
+Null: Defendant is innocent
+Alternative: Defendant is guilty
+
+Type I error: Innocent person is convicted
+Type II error: Guilty person is innocent
+
+type I error would be worse because if your an innocent person, then the last thing you would want is to be convicted
+
+- (a.iii) An alarm is set to sound in the event of a fire.
+
+Null: There is no fire
+Alternative: There is a fire
+
+Type I error: There is an alarm, but no fire
+Type II error: Alarm does sound off, but there is a fire
+
+I think a type I error would be worse because if there's a fire, but no alarm, then that's a problem
+
+- (a.iv) A clinical trial is run for a new pain medication to see if it is more effective than a placebo.
+
+Null: New drug is no more effective than placebo
+Alternative: New drug is more effective
+
+Type I error: Conclude that the drug is no more effective when it actually is more effective 
+Type II error: Conclude drug is effective when it isn't 
+
+(b) If we want to avoid making a type I error, should we choose a large or small $\alpha$, and why?
+
+A small alpha because having a larger alpha means we'd have to reject the null hypothesis 
+
+(c) If we want to avoid making a type II error, should we choose a large or small $\alpha$, and why?
+
+Choose a large alpha because by having a smaller alpha, we are rejecting that the null hypothesis is false given that the null hypothesis is currently false
+
+# Problem 2
+#### (approx. 10 minutes)
+
+Suppose you have completed a hypothesis test and found a final p-value of 0.03.  Which of the following statements is an appropriate conclusion?  Give a brief explanation for each.
+
+p-value: assuming null is true, the probability of observing your data or more extreme
+
+- Since we have a small p-value, we have failed to disprove the alternative hypothesis.
+
+Wrong because we test the null, not the alternative.
+
+- If the null hypothesis were true, the p-value would be larger than 0.05.  So, the null hypothesis is false.
+
+Wrong because p values vary randomly.
+
+- If the null hypothesis were true, the p-value would be smaller in only 3% of cases.  So, the null hypothesis is probably false.
+
+Correct, if the null hypothesis were true, we would see a result this extreme only about 3% of the time
+
+- There is only a 3% chance that the null hypothesis is true, so the null hypothesis is probably false.
+
+Wrong because a p value is not probability null is true.
+
+p-value is the probability of observing your data
+
+# Problem 3
+#### (approx. 15 minutes)
+
+A video game developer is calibrating the difficulty of their game.  They want 25% of players to beat a certain level on their first try.  In a test group of 120 players, 22 of them beat the level on their first try.
+
+Null: prop of players to beat a certain level on their first try = 25%
+Alternative: prop of players to beat a certain level on their first try != 25%
+
+```{r}
+n <- 120
+x <- 22
+phat <- x/n
+phat
+```
+
+(a) Write appropriate hypotheses to test $p$, the true probability that a player beats the level on their first try.  What is the direction of the alternative hypothesis?
+
+(b) Complete the hypothesis test at the 2% level using a binomial null distribution. State your test statistic, p-value, and conclusion.
+
+(c) Re-do the test of hypotheses in (a), but use a Z test as an approximation.  How do your p-value and conclusion compare to the one in (b)?
+
+```{r}
+p = 22/120
+
+se = sqrt(0.25 * (1-p) / 120)
+
+teststat = (p - 0.25) / se
+
+teststat
+
+pnorm(teststat) * 2
+```
+
+(d) List a few advantages and disadvantages of using a binomial test versus using a Z test to analyze a proportion $p$.
+
+(e) Now, consider building a 98% CI for $p$ using the same data.  Do the conclusions about the null value of x from this interval match the conclusions binomial test, the normal test, or both?  Will the CI and hypothesis testing methods always reach the same conclusion?
+
+
+---
+
+# Midterm 2
+
+Use the remaining time in discussion to work on writing your cheat sheet for the second midterm.  You can bring a standard sheet of paper with anything you want written on both sides, and you are welcome to work with others to decide what you want to put on your sheet.
+
+The second midterm will cover the probability unit and basic statistical concepts of STAT 240: homeworks 5-8 and discussions 6-9.
+
+```{r}
+dbinom(2, 3, 0.4)
+
+dbinom(1, 3, 0.6)
+
+
+3*0.6*0.4*0.4
+
+3*0.4*0.6*0.6
+```
+
+
+

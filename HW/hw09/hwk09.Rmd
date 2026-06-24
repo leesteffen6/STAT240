@@ -1,0 +1,225 @@
+---
+title: "Homework 9"
+author: "Lee Steffen"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE,
+                      warning = FALSE, error = TRUE,
+                      fig.height = 3)
+library(tidyverse)
+```
+
+# Preliminaries
+
+- This file should be in `STAT240/homework/hw09` on your local computer.
+- Download `parental_leave.csv` to `STAT240/data`.
+
+
+# Problem 1
+
+(Fictional data): In a survey done in 2000, 63 out of 500 American households reported serving only vegetarian or vegan dishes for Thanksgiving.  In a similar survey done in 2024, the number of reported households serving only vegetarian or vegan dishes was 116 out of 500.
+
+Based on this data, a Z confidence interval for a difference in proportions (2000 - 2024) was reported as 
+
+$$(-0.1455, -0.0665)$$
+
+Identify the confidence level that was used to create this interval.
+
+```{r}
+upper <- -0.0665
+lower <- -0.1455
+p1 <- 63 / 500
+p2 <- 116 / 500
+pe <- p1 - p2
+
+moe <- (upper - lower) / 2
+se <- sqrt((p1*(1 - p1))/500 + (p2*(1 - p2))/500)
+
+z <- moe / se
+
+z
+qnorm(0.95)
+```
+This is a 90% CI.
+
+
+# Problem 2
+
+The human sex ratio at birth slightly favors boys (abouth 50.7% to 51.5% of live births are boys).  The "[returning soldier effect](https://en.wikipedia.org/wiki/Returning_soldier_effect)" is a phenemonon where more boys are born immediately following crises such as war.
+
+In the year 1940, before the US joined World War II, there were 1211684 male and 1148715 female live births in the US.  In the year 1946, after WWII ended, there were 1691220 male and 1597452 female live births in the US.
+
+Build a 95% confidence interval on the difference in proportion of male births between 1940 and 1946 and interpret your results in context.
+
+```{r}
+p1 <- 1211684 / (1148715 + 1211684)
+p2 <- 1691220 / (1597452 + 1691220)
+pe <- p1 - p2
+se <- sqrt((p1*(1 - p1))/(1148715 + 1211684) + (p2*(1 - p2))/(1597452 + 1691220))
+z_star <- qnorm(0.975)
+moe <- z_star * se
+
+ci <- c(pe - moe, pe + moe)
+ci
+```
+We are 95% confident that the true difference of male births between 1940 and 1946 is between -1.753255e-03 and -8.189605e-05. Since the entire interval is negative, this suggests that the proportion of male births was higher in 1946 than 1940
+
+# Problem 3
+
+Perform a hypothesis test to determine whether the proportion of male births in the US in 1946 is greater than the proportion of male births in the US in 1940.  Write appropriate one-sided hypotheses and draw a conclusion with $\alpha = 0.05$.
+
+```{r}
+a = 0.05
+p1 <- 1211684 / (1148715 + 1211684)
+p2 <- 1691220 / (1597452 + 1691220)
+
+p_pool <- (1211684 + 1691220) / (1148715 + 1211684 + 1597452 + 1691220)
+
+se <- sqrt(p_pool*(1 - p_pool)*(1/(1148715 + 1211684) + 1/(1597452 + 1691220)))
+
+z <- (p2 - p1) / se
+
+p_value = 1 - pnorm(z)
+
+p_value 
+z
+
+p_value <= a
+```
+There is evidence that the proportion of male births in 1946 is greater than male births in 1940
+
+# Problem 4
+
+The p-value for a two-sided T test of the hypotheses $H_0: \mu = 15$ versus $H_A: \mu \neq 15$ is 0.03.
+
+(a) Does the 99% T confidence interval for $\mu$ using this same sample include 15? Why or why not?
+
+Given that the p value is 0.03 and that a 99% CI corresponds to 0.01, we have 0.03 > 0.01. If the p value is greater than a, we would fail to reject the null hypothesis. Therefore, mu does include 15.
+
+(b) Does the 95% T confidence interval for $\mu$ using this same sample include 15? Why or why not?
+
+Given that the p value is 0.03 and that a 95% CI corresponds to 0.05, we have 0.03 < 0.05. If the p value is less than a then a, we would reject the null hypothesis. Therefore, mu doesn't include 15.
+
+# Problem 5
+
+The file `parental_leave.csv` contains information on crowdsourced parental leave data (in weeks) for 1601 different companies.  
+
+```{r}
+leave <- read_csv("../../data/parental_leave.csv")
+
+# Remove spaces from column names
+names(leave) <- make.names(names(leave))
+
+# Tidy numeric columns
+leave <- leave %>%
+  mutate_at(vars(Paid.Maternity.Leave, Unpaid.Maternity.Leave,
+                 Paid.Paternity.Leave, Unpaid.Paternity.Leave),
+            as.numeric) %>%
+  replace(is.na(.), 0)
+```
+
+(a) Mutate a column for total paid leave by adding the weeks of paid maternity and paternity leave. Optionally, give the columns shorter names that are easier to reference.
+
+```{r}
+leave <- leave %>%
+  mutate(total_paid_leave = Paid.Maternity.Leave + Paid.Paternity.Leave)
+```
+
+(b) Filter the data to only include the "Educational Services: College & Universities" industry.  Create a histogram of total paid leave and comment on its shape.
+
+```{r}
+edu_leave <- leave %>%
+  filter(Industry == "Educational Services: College & Universities")
+
+ggplot(edu_leave, aes(x = total_paid_leave)) +
+  geom_histogram() +
+  labs(
+    title = "Total Paid Leave for College & Universities",
+    x = "Total Paid Leave",
+    y = "Count"
+  )
+```
+
+The shape of this histogram seems to be skewed right with many companies only offering lower amounts of paid leave
+
+(c) Comment on why a T test for the mean might still be an appropriate method, even though the total paid leave data does not look normal.
+
+A T test can still be appropriate because the sample size is large enough for the Central Limit Theorem to make the sampling distribution of the mean approximately normal, even if the original data are skewed
+
+# Problem 6
+
+Build a 98% T CI for the average total weeks of paid leave of companies in "Educational Services: College & Universities", and interpret the results. You must do this by hand, but you can check your results with `t.test()`.
+
+(a) First, calculate and save the summary values.
+
+```{r}
+summary_vals <- edu_leave %>%
+  summarise(
+    n = n(),
+    xbar = mean(total_paid_leave),
+    s = sd(total_paid_leave)
+  )
+
+summary_vals
+```
+
+(b) Calculate the point estimate and standard error from the data.  Find a T critical value with $n - 1$ degrees of freedom based on $\alpha = 0.02$ and use this to construct the CI.
+
+```{r}
+n <- summary_vals$n
+xbar <- summary_vals$xbar
+s <- summary_vals$s
+
+se <- s / sqrt(n)
+
+t_star <- qt(0.99, df = n - 1)
+
+moe <- t_star * se
+
+lower <- xbar - moe
+upper <- xbar + moe
+
+c(lower, upper)
+```
+We are 98% confident that the average total paid leave for companies in the college and university industry is between 6.824015 and 11.964447 weeks.
+
+# Problem 7
+
+Perform a test at the 2% level to determine whether the "Educational Services: College & Universities" average total paid leave is greater than 10 weeks.  State hypotheses, report a test statistic and p-value. You must do this by hand, but you can check your results with `t.test()`.
+
+```{r}
+n <- summary_vals$n
+xbar <- summary_vals$xbar
+s <- summary_vals$s
+
+mu0 <- 10 
+
+t_stat <- (xbar - mu0) / (s / sqrt(n))
+
+p_value <- 1 - pt(t_stat, df = n - 1)
+
+p_value <= 0.02
+p_value > 0.02
+```
+Since the p-value is greater than 0.02, we fail to reject the null hypothesis. Therefore, there is no evidence that the average total paid leave for companies in the college/university category is greater than 10 weeks.
+
+# Problem 8
+
+Re-calculate the p-value from problem 7, but use a standard normal distribution instead of a $T_{n-1}$ distribution.  Why are the results very similar?
+
+```{r}
+p_value_norm <- 1 - pnorm(t_stat)
+p_value_norm
+```
+Using the normal distribution instead of the t distribution gives a very similar p value. This is because the sample size is large, so the t distribution is close to the standard normal distribution.
+
+
+
+
+
+
+
+

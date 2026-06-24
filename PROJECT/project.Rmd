@@ -1,0 +1,99 @@
+---
+title: "Project"
+author: "Lee Steffen"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+# initializing data
+team_stats <- read.csv("../data/team_stats_2003_2023.csv")
+```
+
+
+```{r}
+glimpse(team_stats)
+summary(team_stats)
+```
+
+
+```{r}
+names(team_stats)
+```
+
+
+```{r}
+team_clean <- team_stats %>%
+  select(wins, points_diff)
+```
+
+
+```{r}
+ggplot(team_clean, aes(x = points_diff, y = wins)) +
+  geom_jitter(alpha = 0.5) +
+  geom_smooth(method="lm", se=FALSE)
+```
+
+```{r}
+model <- lm(wins ~ points_diff, data = team_clean)
+summary(model)
+```
+
+
+```{r}
+x <- team_clean$points_diff
+y <- team_clean$wins
+
+n <- length(x)
+xbar <- mean(x)
+ybar <- mean(y)
+sx <- sd(x)
+sy <- sd(y)
+
+r <- sum((x - xbar) * (y - ybar)) / ((n - 1) * sx * sy)
+r
+```
+
+```{r}
+b1 <- r * (sy / sx)
+b1
+
+b0 <- ybar - b1 * xbar
+b0
+```
+
+
+```{r}
+yhat <- b0 + b1 * x
+head(yhat)
+
+res <- y - yhat
+head(res)
+
+SSE <- sum(res^2)
+SSE
+
+s <- sqrt(SSE / (n - 2))
+s
+
+SE_b1 <- s / sqrt(sum((x - xbar)^2))
+SE_b1
+
+t_stat <- b1 / SE_b1
+t_stat
+
+p_val <- 2 * (1 - pt(abs(t_stat), df = n - 2))
+p_val
+
+SST <- sum((y - ybar)^2)
+R2 <- 1 - SSE / SST
+R2
+```
+
